@@ -69,6 +69,7 @@ namespace Gameplay
             int getDelayMilliseconds();
             sf::String getTimeComplexity();
             void processBubbleSort();
+			void processInsertionSort();
            
             void completedColour();
         };

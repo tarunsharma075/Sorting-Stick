@@ -160,7 +160,13 @@ namespace Gameplay
 				time_complexity = "O(n^2)";
 				sort_thread = std::thread(&StickCollectionController::processBubbleSort, this);
 				break;
+
+			case Gameplay::Collection::SortType::INSERTION_SORT:
+
+				sort_thread = std::thread(&StickCollectionController::processInsertionSort, this);
+				break;
 			}
+		
 		}
 
 		bool StickCollectionController::isCollectionSorted()
@@ -239,6 +245,44 @@ namespace Gameplay
 
 			completedColour();
 		}
+		void StickCollectionController::processInsertionSort()
+		{
+			/*ServiceLocator::getInstance()->getSoundService()->playSound(Sound::SoundType::COMPARE_SFX);*/
+
+			ServiceLocator::getInstance()->getSoundService()->playSound(Sound::SoundType::COMPARE_SFX);
+
+			for (int i = 1; i < sticks.size(); i++) {
+				if (sort_State == SortingState::NotSorting) { break; } // Check if sorting has stopped or been interrupted
+
+				int j = i - 1;
+				Stick* key = sticks[i];
+				number_of_array_access++;
+				sticks[i]->stick_view->setFillColor(collection_model->processing_element_color); // Set the key stick to processing color
+				std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+
+				while (j >= 0 && sticks[j]->data > key->data) {
+
+					if (sort_State == SortingState::NotSorting) { break; }
+					number_of_array_access++;
+					number_of_comparisons++;
+					sticks[j + 1] = sticks[j];
+					sticks[j + 1]->stick_view->setFillColor(collection_model->processing_element_color); // Set the current stick to processing color
+					j--;
+					updateStickPosition();
+					std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+
+
+				}
+
+				sticks[j + 1] = key; // Insert the key stick at the correct position
+				number_of_array_access++;
+				sticks[j + 1]->stick_view->setFillColor(collection_model->processing_element_color); // Set the inserted stick to placement position color
+				updateStickPosition();
+				std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+				sticks[j + 1]->stick_view->setFillColor(collection_model->selected_element_color); // Set the inserted stick to placement position color
+			}
+			completedColour();
+		}
 		void StickCollectionController::completedColour()
 		{
 
@@ -259,7 +303,7 @@ namespace Gameplay
 						break;
 					}
 				
-					ServiceLocator::getInstance()->getSoundService()->playSound(Sound::SoundType::COMPARE_SFX);
+					/*ServiceLocator::getInstance()->getSoundService()->playSound(Sound::SoundType::COMPARE_SFX);*/
 					sticks[j]->stick_view->setFillColor(collection_model->placement_position_element_color);
 					std::this_thread::sleep_for(std::chrono::milliseconds(color_delay));
 				
