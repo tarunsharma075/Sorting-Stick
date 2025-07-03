@@ -165,7 +165,13 @@ namespace Gameplay
 
 				sort_thread = std::thread(&StickCollectionController::processInsertionSort, this);
 				break;
+
+			case Gameplay::Collection::SortType::SELECTION_SORT:
+				sort_thread = std::thread(&StickCollectionController::processSelectionSort, this);
+					break;
 			}
+			
+
 		
 		}
 
@@ -282,6 +288,54 @@ namespace Gameplay
 				sticks[j + 1]->stick_view->setFillColor(collection_model->selected_element_color); // Set the inserted stick to placement position color
 			}
 			completedColour();
+		}
+		void StickCollectionController::processSelectionSort() 
+			{
+				for (int i = 0; i < sticks.size() - 1; i++) {
+
+					if (sort_State == SortingState::NotSorting) { break; } // Check if sorting has stopped or been interrupted
+
+					int min = i;
+					sticks[i]->stick_view->setFillColor(collection_model->selected_element_color);
+					number_of_array_access++;
+
+					for (int j = i; j < sticks.size(); j++) {
+						if (sort_State == SortingState::NotSorting) { break; }
+						number_of_array_access++;
+						number_of_comparisons++;
+						sticks[j]->stick_view->setFillColor(collection_model->processing_element_color);
+						std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+						if (sticks[j]->data < sticks[min]->data) {
+							sticks[min]->stick_view->setFillColor(collection_model->element_color);
+							min = j;
+							sticks[min]->stick_view->setFillColor(collection_model->processing_element_color);
+
+						}
+						else {
+							sticks[j]->stick_view->setFillColor(collection_model->element_color);
+						}
+
+						number_of_array_access += 3;
+						
+
+						sticks[i]->stick_view->setFillColor(collection_model->placement_position_element_color);  // Mark as sorted
+						updateStickPosition();
+
+					}
+
+					number_of_array_access += 3;
+					std::swap(sticks[min], sticks[i]);  // Place the found minimum at its final position
+
+					sticks[i]->stick_view->setFillColor(collection_model->placement_position_element_color);  // Mark as sorted
+					updateStickPosition();
+
+				}
+			
+		
+				// Ensure the last stick is also marked as sorted
+				sticks[sticks.size() - 1]->stick_view->setFillColor(collection_model->placement_position_element_color);
+				completedColour();
+			
 		}
 		void StickCollectionController::completedColour()
 		{
