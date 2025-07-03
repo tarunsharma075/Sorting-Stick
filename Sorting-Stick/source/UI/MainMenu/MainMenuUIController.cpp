@@ -5,6 +5,7 @@
 #include "Event/EventService.h"
 #include "Global/Config.h"
 #include "Global/ServiceLocator.h"
+#include"../../include/Main/GameService.h"
 
 namespace UI
 {
@@ -15,6 +16,7 @@ namespace UI
         using namespace UIElement;
         using namespace Sound;
         using namespace Graphics;
+        
 
         MainMenuUIController::MainMenuUIController()
         {
@@ -73,8 +75,8 @@ namespace UI
 
         void MainMenuUIController::registerButtonCallback()
         {
-            //bubble_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::bubbleSortButtonCallback, this));
-            //insertion_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::insertionSortButtonCallback, this));
+            bubble_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::bubbleSortButtonCallback, this));
+            insertion_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::insertionSortButtonCallback, this));
             //selection_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::selectionSortButtonCallback, this));
             //merge_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::mergeSortButtonCallback, this));
             //quick_sort_button->registerCallbackFuntion(std::bind(&MainMenuUIController::quickSortButtonCallback, this));
@@ -85,11 +87,16 @@ namespace UI
         void MainMenuUIController::bubbleSortButtonCallback()
         {
             ServiceLocator::getInstance()->getSoundService()->playSound(SoundType::BUTTON_CLICK);
+            GameService::setGameState(GameState::GAMEPLAY);
+            ServiceLocator::getInstance()->getGameplayService()->sortElement(Gameplay::Collection::SortType::BUBBLE_SORT);
+           
         }
 
         void MainMenuUIController::insertionSortButtonCallback()
         {
             ServiceLocator::getInstance()->getSoundService()->playSound(SoundType::BUTTON_CLICK);
+            GameService::setGameState(GameState::GAMEPLAY);
+            ServiceLocator::getInstance()->getGameplayService()->sortElement(Gameplay::Collection::SortType::INSERTION_SORT);
         }
 
         void MainMenuUIController::selectionSortButtonCallback()
