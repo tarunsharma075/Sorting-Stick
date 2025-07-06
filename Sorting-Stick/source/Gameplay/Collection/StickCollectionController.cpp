@@ -169,6 +169,10 @@ namespace Gameplay
 			case Gameplay::Collection::SortType::SELECTION_SORT:
 				sort_thread = std::thread(&StickCollectionController::processSelectionSort, this);
 					break;
+
+			case Gameplay::Collection::SortType::MERGE_SORT:
+				sort_thread = std::thread(&StickCollectionController::processMergeSort, this);
+				break;
 			}
 			
 
@@ -337,6 +341,72 @@ namespace Gameplay
 				completedColour();
 			
 		}
+
+		void StickCollectionController::processMergeSort()
+		{
+			MergeSort(0, sticks.size() - 1);
+			completedColour();
+
+		}
+		
+		void StickCollectionController::InPlaceMerge(int left, int mid, int right)
+		{
+			int i = left;
+			int j = mid + 1;
+
+			while (i <= mid && j <= right) {
+				number_of_comparisons++;
+				number_of_array_access += 2;
+
+				
+
+				if (sticks[i]->data <= sticks[j]->data) {
+					
+					i++;
+				}
+				else {
+					// Save the smaller value
+					Stick* value = sticks[j];
+					int index = j;
+
+					// Shift elements rightward
+					while (index!=i) {
+						sticks[index] = sticks[index - 1];
+						index--;
+						number_of_array_access += 2;
+					}
+
+					// Put value at correct place
+					sticks[i] = value;
+					number_of_array_access += 2;
+
+					i++;
+					mid++;
+					j++;
+					updateStickPosition();
+				}
+
+				sticks[i- 1]->stick_view->setFillColor(collection_model->processing_element_color);
+				std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+				sticks[i - 1]->stick_view->setFillColor(collection_model->element_color);
+			}
+		}
+
+		void StickCollectionController::MergeSort(int left, int right)
+		{
+			if (left < right) {
+				int mid = left + (right - left) / 2;
+
+				
+				MergeSort(left, mid);
+				MergeSort(mid + 1, right);
+
+				
+				InPlaceMerge(left, mid, right);
+			}
+		}
+		
+		
 		void StickCollectionController::completedColour()
 		{
 
