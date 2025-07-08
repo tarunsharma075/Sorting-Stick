@@ -173,6 +173,9 @@ namespace Gameplay
 			case Gameplay::Collection::SortType::MERGE_SORT:
 				sort_thread = std::thread(&StickCollectionController::processMergeSort, this);
 				break;
+
+			case Gameplay::Collection::SortType::QUICK_SORT:
+				sort_thread = std::thread(&StickCollectionController::processQuickSort, this); // Placeholder for quick sort implementation
 			}
 			
 
@@ -405,6 +408,46 @@ namespace Gameplay
 				InPlaceMerge(left, mid, right);
 			}
 		}
+
+		void StickCollectionController::processQuickSort()
+		{
+			quickSort(0, sticks.size() - 1);
+			completedColour();
+		}
+
+		int StickCollectionController::partition(int low, int high)
+		{
+			sticks[high]->stick_view->setFillColor(collection_model->selected_element_color);
+			int i = low- 1;
+
+			for (int j = low; j < high; j++) {
+				sticks[j]->stick_view->setFillColor(collection_model->processing_element_color);
+
+				if (sticks[j]->data < sticks[high]->data) {
+					i++;
+					number_of_array_access += 3;
+					number_of_comparisons++;
+					std::swap(sticks[i], sticks[j]);
+					updateStickPosition();
+					std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+
+				}
+				sticks[j]->stick_view->setFillColor(collection_model->element_color); 
+			}
+			std::swap(sticks[i + 1], sticks[high]);
+			number_of_array_access += 3;
+			return i + 1;
+		}
+
+		void StickCollectionController::quickSort(int low, int high)
+		{
+			if (low < high) {
+				int location = partition(low, high);
+				quickSort(low, location - 1);
+				quickSort(location + 1, high);
+			}
+		}
+
 		
 		
 		void StickCollectionController::completedColour()
