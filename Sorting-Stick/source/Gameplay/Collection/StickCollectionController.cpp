@@ -33,7 +33,7 @@ namespace Gameplay
 		{
 			sort_State = SortingState::NotSorting;
 			collection_view->initialize(this);
-		
+
 			initializeSticks();
 			reset();
 		}
@@ -168,7 +168,7 @@ namespace Gameplay
 
 			case Gameplay::Collection::SortType::SELECTION_SORT:
 				sort_thread = std::thread(&StickCollectionController::processSelectionSort, this);
-					break;
+				break;
 
 			case Gameplay::Collection::SortType::MERGE_SORT:
 				sort_thread = std::thread(&StickCollectionController::processMergeSort, this);
@@ -176,10 +176,13 @@ namespace Gameplay
 
 			case Gameplay::Collection::SortType::QUICK_SORT:
 				sort_thread = std::thread(&StickCollectionController::processQuickSort, this); // Placeholder for quick sort implementation
-			}
-			
 
-		
+			case Gameplay::Collection::SortType::RADIX_SORT:
+				sort_thread = std::thread(&StickCollectionController::ProcessRadixSort, this); // Placeholder for radix sort implementation
+			}
+
+
+
 		}
 
 		bool StickCollectionController::isCollectionSorted()
@@ -214,7 +217,7 @@ namespace Gameplay
 		void StickCollectionController::processBubbleSort()
 		{
 
-	     SoundService* sound = Global::ServiceLocator::getInstance()->getSoundService();
+			SoundService* sound = Global::ServiceLocator::getInstance()->getSoundService();
 
 			for (int j = 0; j < sticks.size(); j++) {   // Loop through the sticks array
 				if (sort_State == SortingState::NotSorting) { break; }   // Check if sorting has stopped or been interrupted
@@ -296,53 +299,53 @@ namespace Gameplay
 			}
 			completedColour();
 		}
-		void StickCollectionController::processSelectionSort() 
-			{
-				for (int i = 0; i < sticks.size() - 1; i++) {
+		void StickCollectionController::processSelectionSort()
+		{
+			for (int i = 0; i < sticks.size() - 1; i++) {
 
-					if (sort_State == SortingState::NotSorting) { break; } // Check if sorting has stopped or been interrupted
+				if (sort_State == SortingState::NotSorting) { break; } // Check if sorting has stopped or been interrupted
 
-					int min = i;
-					sticks[i]->stick_view->setFillColor(collection_model->selected_element_color);
+				int min = i;
+				sticks[i]->stick_view->setFillColor(collection_model->selected_element_color);
+				number_of_array_access++;
+
+				for (int j = i; j < sticks.size(); j++) {
+					if (sort_State == SortingState::NotSorting) { break; }
 					number_of_array_access++;
+					number_of_comparisons++;
+					sticks[j]->stick_view->setFillColor(collection_model->processing_element_color);
+					std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
+					if (sticks[j]->data < sticks[min]->data) {
+						sticks[min]->stick_view->setFillColor(collection_model->element_color);
+						min = j;
+						sticks[min]->stick_view->setFillColor(collection_model->processing_element_color);
 
-					for (int j = i; j < sticks.size(); j++) {
-						if (sort_State == SortingState::NotSorting) { break; }
-						number_of_array_access++;
-						number_of_comparisons++;
-						sticks[j]->stick_view->setFillColor(collection_model->processing_element_color);
-						std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
-						if (sticks[j]->data < sticks[min]->data) {
-							sticks[min]->stick_view->setFillColor(collection_model->element_color);
-							min = j;
-							sticks[min]->stick_view->setFillColor(collection_model->processing_element_color);
-
-						}
-						else {
-							sticks[j]->stick_view->setFillColor(collection_model->element_color);
-						}
-
-						number_of_array_access += 3;
-						
-
-						sticks[i]->stick_view->setFillColor(collection_model->placement_position_element_color);  // Mark as sorted
-						updateStickPosition();
-
+					}
+					else {
+						sticks[j]->stick_view->setFillColor(collection_model->element_color);
 					}
 
 					number_of_array_access += 3;
-					std::swap(sticks[min], sticks[i]);  // Place the found minimum at its final position
+
 
 					sticks[i]->stick_view->setFillColor(collection_model->placement_position_element_color);  // Mark as sorted
 					updateStickPosition();
 
 				}
-			
-		
-				// Ensure the last stick is also marked as sorted
-				sticks[sticks.size() - 1]->stick_view->setFillColor(collection_model->placement_position_element_color);
-				completedColour();
-			
+
+				number_of_array_access += 3;
+				std::swap(sticks[min], sticks[i]);  // Place the found minimum at its final position
+
+				sticks[i]->stick_view->setFillColor(collection_model->placement_position_element_color);  // Mark as sorted
+				updateStickPosition();
+
+			}
+
+
+			// Ensure the last stick is also marked as sorted
+			sticks[sticks.size() - 1]->stick_view->setFillColor(collection_model->placement_position_element_color);
+			completedColour();
+
 		}
 
 		void StickCollectionController::processMergeSort()
@@ -351,7 +354,7 @@ namespace Gameplay
 			completedColour();
 
 		}
-		
+
 		void StickCollectionController::InPlaceMerge(int left, int mid, int right)
 		{
 			int i = left;
@@ -361,10 +364,10 @@ namespace Gameplay
 				number_of_comparisons++;
 				number_of_array_access += 2;
 
-				
+
 
 				if (sticks[i]->data <= sticks[j]->data) {
-					
+
 					i++;
 				}
 				else {
@@ -373,7 +376,7 @@ namespace Gameplay
 					int index = j;
 
 					// Shift elements rightward
-					while (index!=i) {
+					while (index != i) {
 						sticks[index] = sticks[index - 1];
 						index--;
 						number_of_array_access += 2;
@@ -389,7 +392,7 @@ namespace Gameplay
 					updateStickPosition();
 				}
 
-				sticks[i- 1]->stick_view->setFillColor(collection_model->processing_element_color);
+				sticks[i - 1]->stick_view->setFillColor(collection_model->processing_element_color);
 				std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
 				sticks[i - 1]->stick_view->setFillColor(collection_model->element_color);
 			}
@@ -400,11 +403,11 @@ namespace Gameplay
 			if (left < right) {
 				int mid = left + (right - left) / 2;
 
-				
+
 				MergeSort(left, mid);
 				MergeSort(mid + 1, right);
 
-				
+
 				InPlaceMerge(left, mid, right);
 			}
 		}
@@ -418,7 +421,7 @@ namespace Gameplay
 		int StickCollectionController::partition(int low, int high)
 		{
 			sticks[high]->stick_view->setFillColor(collection_model->selected_element_color);
-			int i = low- 1;
+			int i = low - 1;
 
 			for (int j = low; j < high; j++) {
 				sticks[j]->stick_view->setFillColor(collection_model->processing_element_color);
@@ -432,7 +435,7 @@ namespace Gameplay
 					std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay));
 
 				}
-				sticks[j]->stick_view->setFillColor(collection_model->element_color); 
+				sticks[j]->stick_view->setFillColor(collection_model->element_color);
 			}
 			std::swap(sticks[i + 1], sticks[high]);
 			number_of_array_access += 3;
@@ -448,8 +451,14 @@ namespace Gameplay
 			}
 		}
 
-		
-		
+		void StickCollectionController::ProcessRadixSort()
+		{
+			RadixSort();
+			completedColour();
+		}
+
+
+
 		void StickCollectionController::completedColour()
 		{
 
@@ -458,25 +467,81 @@ namespace Gameplay
 				if (sort_State == SortingState::NotSorting) {
 					break;
 				}
-				 
-					sticks[i]->stick_view->setFillColor(collection_model->element_color); // Reset to default color if not completed
-				
 
-				
+				sticks[i]->stick_view->setFillColor(collection_model->element_color); // Reset to default color if not completed
+
+
+
 				for (int j = 0; j < sticks.size(); j++) {
-				
+
 					if (sort_State == SortingState::NotSorting) {
 
 						break;
 					}
-				
+
 					/*ServiceLocator::getInstance()->getSoundService()->playSound(Sound::SoundType::COMPARE_SFX);*/
 					sticks[j]->stick_view->setFillColor(collection_model->placement_position_element_color);
 					std::this_thread::sleep_for(std::chrono::milliseconds(color_delay));
-				
+
 				}
-				
+
 			}
+		}
+		void StickCollectionController::countSort(int exponent)
+		{
+			SoundService* sound = Global::ServiceLocator::getInstance()->getSoundService();
+			std::vector<Stick*> output(sticks.size());
+			std::vector<int> count(10, 0);
+
+			// Process each element to count digits
+			for (int i = 0; i < sticks.size(); ++i) {
+				sound->playSound(SoundType::COMPARE_SFX);
+				int digit = (sticks[i]->data / exponent) % 10;
+				count[digit]++;
+				number_of_array_access++;
+				sticks[i]->stick_view->setFillColor(collection_model->processing_element_color);
+				std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay / 2)); // Delay for visual processing
+				sticks[i]->stick_view->setFillColor(collection_model->element_color);  // Reset color after processing
+			}
+
+			// Accumulate the count array
+			for (int i = 1; i < 10; ++i) {
+				count[i] += count[i - 1];
+			}
+
+			// Sorting based on the current digit
+			for (int i = sticks.size() - 1; i >= 0; --i) {
+
+				int digit = (sticks[i]->data / exponent) % 10;
+				output[count[digit] - 1] = sticks[i];
+				output[count[digit] - 1]->stick_view->setFillColor(collection_model->processing_element_color);
+				count[digit]--;
+				number_of_array_access++;
+
+			}
+
+			// Place elements back into the main array
+			for (int i = 0; i < sticks.size(); ++i) {
+				sticks[i] = output[i];
+				sticks[i]->stick_view->setFillColor(collection_model->placement_position_element_color);  // Final sorted color for this digit
+				updateStickPosition(i);
+				std::this_thread::sleep_for(std::chrono::milliseconds(current_operation_delay)); // Delay to observe final sorting state
+			}
+		}
+		void StickCollectionController::RadixSort()
+		{
+			int maxElement = INT_MIN;
+			const int size = sticks.size();
+
+			for (int i = 0; i < size; ++i) maxElement = std::max(sticks[i]->data, maxElement);
+			for (int exponent = 1; maxElement / exponent > 0; exponent *= 10) countSort(exponent);
+		}
+		void StickCollectionController::updateStickPosition(int i)
+		{
+			float x_position = (i * sticks[i]->stick_view->getSize().x) + ((i)*collection_model->elements_spacing);
+			float y_position = collection_model->element_y_position - sticks[i]->stick_view->getSize().y;
+
+			sticks[i]->stick_view->setPosition(sf::Vector2f(x_position, y_position));
 		}
 	}
 }
